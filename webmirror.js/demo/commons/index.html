@@ -205,13 +205,16 @@
 
             document.querySelector("form").addEventListener('submit', async (ev) => {
                 ev.preventDefault();
+                const div = document.querySelector("#olResults");
                 const query = document.querySelector("form input").value;
 
                 const results = await worker.db.exec(`select openlibrary_key as key, title, author from works_fts5(?) limit 5;`, [query]);
-                console.log("ALPER", results);
+                if (results.length === 0) {
+                    div.textContent = "No results found.";
+                    return;
+                }
 
                 const template = document.getElementById('olResultTemplate').innerHTML;
-                const div = document.querySelector("#olResults");
                 div.innerHTML = '';
                 for (const result of results[0].values) {
                     const rendered = Mustache.render(template, {
