@@ -6,12 +6,6 @@ async function main() {
     return;
   }
 
-  // const oldRegistrations = await navigator.serviceWorker.getRegistrations();
-  // for (const reg of oldRegistrations) {
-  //   reg.unregister();
-  //   console.log("Old service worker unregistered:", reg);
-  // }
-
   const newRegistration = await navigator.serviceWorker.register(
     "/service-worker.js",
     {
@@ -21,6 +15,10 @@ async function main() {
   console.log("New service worker registered:", newRegistration);
 
   await navigator.serviceWorker.ready;
+
+  if (navigator.serviceWorker.controller == null) {
+    window.location.reload();
+  }
 }
 
 main();
