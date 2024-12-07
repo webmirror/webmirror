@@ -15,7 +15,6 @@ class HttpError extends Error {
 
 export function wmFetch(event: FetchEvent): Promise<Response> {
   try {
-    console.log("[webmirror] fetch", event);
     return wmFetchInternal(event);
   } catch (error) {
     if (error instanceof HttpError) {
@@ -40,7 +39,6 @@ async function wmFetchInternal(event: FetchEvent): Promise<Response> {
   }
 
   if (!["HEAD", "GET"].includes(event.request.method)) {
-    console.log("[webmirror] unsupported HTTP method", event.request.method);
     throw new HttpError(400, "unsupported HTTP method");
   }
 
@@ -63,9 +61,6 @@ async function wmFetchInternal(event: FetchEvent): Promise<Response> {
     },
   )).json();
 
-  console.log("[webmirror] manifest", imageDigest, manifest);
-  console.log("[webmirror] path", path);
-
   // assume it's a hash of type
   // path --> {size: integer, digest: base32 encoded sha-256 hash}
   const { size, digest: fileDigest } = manifest[path];
@@ -76,8 +71,6 @@ async function wmFetchInternal(event: FetchEvent): Promise<Response> {
       integrity: `sha256-${encodeBase64(decodeBase32(fileDigest))}`,
     },
   )).blob();
-
-  console.log("[webmirror] fetched", imageDigest, path, fileBlob);
 
   const rangeHeader = event.request.headers.get("Range");
   if (rangeHeader) {
@@ -97,7 +90,6 @@ async function wmFetchInternal(event: FetchEvent): Promise<Response> {
     }
 
     const range = ranges[0];
-    console.log("[webmirror] range response", range);
     return new Response(
       fileBlob.slice(range.start, range.end + 1),
       {
@@ -110,7 +102,6 @@ async function wmFetchInternal(event: FetchEvent): Promise<Response> {
       },
     );
   } else {
-    console.log("[webmirror] full response");
     return new Response(
       fileBlob,
       {

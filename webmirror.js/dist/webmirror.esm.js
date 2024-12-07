@@ -339,7 +339,6 @@ var webmirror = (() => {
   };
   function wmFetch(event) {
     try {
-      console.log("[webmirror] fetch", event);
       return wmFetchInternal(event);
     } catch (error) {
       if (error instanceof HttpError) {
@@ -362,7 +361,6 @@ var webmirror = (() => {
       );
     }
     if (!["HEAD", "GET"].includes(event.request.method)) {
-      console.log("[webmirror] unsupported HTTP method", event.request.method);
       throw new HttpError(400, "unsupported HTTP method");
     }
     const imageDigest = url.hostname.replace(/\.webmirror$/, "");
@@ -377,8 +375,6 @@ var webmirror = (() => {
         integrity: `sha256-${encodeBase64(decodeBase322(imageDigest))}`
       }
     )).json();
-    console.log("[webmirror] manifest", imageDigest, manifest);
-    console.log("[webmirror] path", path);
     const { size, digest: fileDigest } = manifest[path];
     const fileBlob = await (await fetch(
       `${server}${path}`,
@@ -386,7 +382,6 @@ var webmirror = (() => {
         integrity: `sha256-${encodeBase64(decodeBase322(fileDigest))}`
       }
     )).blob();
-    console.log("[webmirror] fetched", imageDigest, path, fileBlob);
     const rangeHeader = event.request.headers.get("Range");
     if (rangeHeader) {
       const ranges = (0, import_range_parser.default)(size, rangeHeader);
@@ -400,7 +395,6 @@ var webmirror = (() => {
         return new Response(fileBlob);
       }
       const range = ranges[0];
-      console.log("[webmirror] range response", range);
       return new Response(
         fileBlob.slice(range.start, range.end + 1),
         {
@@ -413,8 +407,14 @@ var webmirror = (() => {
         }
       );
     } else {
-      console.log("[webmirror] full response");
-      return new Response(fileBlob);
+      return new Response(
+        fileBlob,
+        {
+          headers: {
+            "Accept-Ranges": "bytes"
+          }
+        }
+      );
     }
   }
   function normalizePath(path) {
