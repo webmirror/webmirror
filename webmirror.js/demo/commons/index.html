@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <title>Public domain &mdash; WebMirror Demo</title>
+    <script src="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js"></script>
+    <script src="https://www.unpkg.com/sql.js-httpvfs@0.8.12/dist/index.js"></script>
+    <script src="https://unpkg.com/mustache"></script>
+    <link href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css" rel="stylesheet">
+    <style>
+        body {
+            margin-left: auto;
+            margin-right: auto;
+            max-width: 700px;
+            hyphens: auto;
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: sans-serif;
+        }
+
+        video {
+            display: block;
+            max-width: 640px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        div#gallery {
+            display: flex;
+            height: 90vh;
+            margin-left: calc((-100vw + 100%) / 2);
+            margin-right: calc((-100vw + 100%) / 2);
+            overflow: scroll;
+        }
+
+        audio {
+            width: 100%;
+        }
+
+        div#map {
+            height: 0;
+            max-width: 640px;
+            /* Percentages refer to the *width* of the containing block.
+             * https://developer.mozilla.org/en-US/docs/Web/CSS/padding-bottom
+             */
+            padding-bottom: 100%;
+            margin: 16px auto 16px auto;
+        }
+
+        form {
+            display: flex;
+            margin-bottom: 16px;
+        }
+
+        form input {
+            flex-grow: 2;
+            margin-right: 8px;
+        }
+
+        div.callout {
+            border: 1px solid #000000;
+            border-radius: 4px;
+            padding: 0 0.5em;
+        }
+
+        div.callout header {
+            font-family: sans-serif;
+            font-weight: bold;
+        }
+    </style>
+    <script src="main.js"></script>
+</head>
+
+<body>
+    <h1>Public domain</h1>
+    <p>
+        The <strong>public domain (PD)</strong> consists of all the creative work to which no exclusive intellectual
+        property rights apply. Those rights may have expired, been forfeited, expressly waived, or may be inapplicable.
+        Because no one holds the exclusive rights, anyone can legally use or reference those works without permission.
+    </p>
+
+    <h2>Samples</h2>
+    <h3>Kismet, Man of Fate</h3>
+    <p>
+        <strong>Kismet, Man of Fate</strong> is a superhero published by Elliot Publishing Company in the Golden Age of
+        Comic Books. The series features adventures of an Algerian superhero who was thought lost by the Allies at the
+        end of World War II. The character originally appeared in Bomber Comics #1 (1944), making him the first
+        identified Muslim superhero.
+    </p>
+
+    <div id="gallery">
+        <img src="http://qhlvaga6nfbt24cj2g3wvoyg4gyvznox6262lh2rhhhcmpjvvpqq.webmirror/1.jpg">
+        <img src="http://qhlvaga6nfbt24cj2g3wvoyg4gyvznox6262lh2rhhhcmpjvvpqq.webmirror/2.jpg">
+        <img src="http://qhlvaga6nfbt24cj2g3wvoyg4gyvznox6262lh2rhhhcmpjvvpqq.webmirror/3.jpg">
+        <img src="http://qhlvaga6nfbt24cj2g3wvoyg4gyvznox6262lh2rhhhcmpjvvpqq.webmirror/4.jpg">
+        <img src="http://qhlvaga6nfbt24cj2g3wvoyg4gyvznox6262lh2rhhhcmpjvvpqq.webmirror/5.jpg">
+        <img src="http://qhlvaga6nfbt24cj2g3wvoyg4gyvznox6262lh2rhhhcmpjvvpqq.webmirror/6.jpg">
+        <img src="http://qhlvaga6nfbt24cj2g3wvoyg4gyvznox6262lh2rhhhcmpjvvpqq.webmirror/7.jpg">
+    </div>
+
+    <h3>Passacaglia and Fugue in C minor, BWV 582</h3>
+    <p>
+        <strong>Passacaglia and Fugue in C minor</strong> (BWV 582) is an organ piece by Johann Sebastian Bach.
+        Presumably composed early in Bach's career, it is one of his most important and well-known works, and an
+        important influence on 19th- and 20th-century passacaglias: Robert Schumann described the variations of the
+        passacaglia as "intertwined so ingeniously that one can never cease to be amazed."
+    </p>
+    <!-- Firefox doesn't use the Service Worker for <video> unless
+      -- `crossorigin="anonymous"`.
+      --
+      -- See https://stackoverflow.com/q/79061893/4466589 and
+      -- https://bugzilla.mozilla.org/show_bug.cgi?id=1923096
+      --
+      -- > A notable possibility is that CORS preflights explicitly bypass the
+      -- > Service Worker in our code, with the crossorigin flag changing what
+      -- > security flag this check will pick which does impact the
+      -- > decision-making about whether a preflight check is needed.
+      -- https://bugzilla.mozilla.org/show_bug.cgi?id=1923096#c7
+      -->
+    <audio controls crossorigin="anonymous"
+        src="http://ypw5mjhdg3qb2ia4xnuzbiywemsctda5rg3gsbpyvr7hy34nxemq.webmirror/bwv-582.m4a"></audio>
+
+    <h3>Man with a Movie Camera</h3>
+    <p><strong>Man with a Movie Camera</strong> (Russian: Человек с киноаппаратом, romanized: <i>Chelovek s
+            kinoapparatom</i>) is an experimental 1929 Soviet silent documentary film, directed by Dziga Vertov,
+        filmed
+        by his brother Mikhail Kaufman, and edited by Vertov's wife Yelizaveta Svilova. Kaufman also appears as the
+        eponymous Man of the film. </p>
+
+    <!-- Firefox doesn't use the Service Worker for <video> unless
+      -- `crossorigin="anonymous"`.
+      --
+      -- See above.
+      -->
+    <video controls crossorigin="anonymous">
+        <source src="http://ptk4cvuyidlpx5vk35yus7hlxq6edk5xwhs5lkftrtti4cpimhsq.webmirror/man-with-a-movie-camera.mp4"
+            type="video/mp4">
+    </video>
+
+    <h3>OpenStreetMap</h3>
+    <p>
+        <strong>OpenStreetMap</strong> (abbreviated <strong>OSM</strong>) is a website that uses an open geographic
+        database which is updated and
+        maintained by a community of volunteers via open collaboration. Contributors collect data from surveys,
+        trace
+        from aerial photo imagery or satellite imagery, and also import from other freely licensed geodata sources.
+        OpenStreetMap is freely licensed under the Open Database License and as a result commonly used to make
+        electronic maps, inform turn-by-turn navigation, assist in humanitarian aid and data visualisation.
+        OpenStreetMap uses its own topology to store geographical features which can then be exported into other GIS
+        file formats. The OpenStreetMap website itself is an online map, geodata search engine and editor.
+    </p>
+    <div id="map"></div>
+    <script>
+        const map = new maplibregl.Map({
+            style: '/openstreetmap/bright',
+            center: [2.743308122111671, 50.8390414028689],
+            zoom: 5,
+            container: 'map',
+        });
+        map.setMaxZoom(6);
+    </script>
+
+    <div class="callout">
+        <header>
+            <p>WebMirror demo</p>
+        </header>
+        <p>This section demonstrates how you can use WebMirror to load map tiles from .</p>
+    </div>
+
+    <h3>Open Library</h3>
+    <p><strong>Open Library</strong> is an online project intended to create "one web page for every book ever
+        published". Created by Aaron Swartz, Brewster Kahle, Alexis Rossi, Anand Chitipothu, and Rebecca Hargrave
+        Malamud, Open Library is a project of the Internet Archive, a nonprofit organization. It has been funded in
+        part
+        by grants from the California State Library and the Kahle/Austin Foundation. Open Library provides online
+        digital copies in multiple formats, created from images of many public domain, out-of-print, and in-print
+        books.
+    </p>
+
+    <form>
+        <input type="text">
+        <button type="submit">Search</button>
+    </form>
+    <ul id="olResults">
+    </ul>
+
+    <script id="olResultTemplate" type="x-tmpl-mustache">
+        <li><a href="https://openlibrary.org{{ key }}">{{ title }}</a> by {{ author }}</li>
+    </script>
+    <script>
+        const config = {
+            from: "jsonconfig",
+            configUrl: "http://bzcp4cesceixrxnon6uy3gsz6tlh3kma2v2stz4unjcwilv2ueaa.webmirror/config.json"
+        };
+
+        (async () => {
+            const worker = await createDbWorker(
+                [config],
+                "/sqlite.worker.js",
+                "/sql-wasm.wasm",
+            );
+
+            document.querySelector("form").addEventListener('submit', async (ev) => {
+                ev.preventDefault();
+                const query = document.querySelector("form input").value;
+
+                const results = await worker.db.exec(`select openlibrary_key as key, title, author from works_fts5(?) limit 5;`, [query]);
+                console.log("ALPER", results);
+
+                const template = document.getElementById('olResultTemplate').innerHTML;
+                const div = document.querySelector("#olResults");
+                div.innerHTML = '';
+                for (const result of results[0].values) {
+                    const rendered = Mustache.render(template, {
+                        key: result[0],
+                        title: result[1],
+                        author: result[2]
+                    });
+                    div.innerHTML += rendered;
+                }
+            });
+        })();
+    </script>
+
+    <div class="callout">
+        <header>
+            <p>WebMirror demo</p>
+        </header>
+        <p>This demoes SQLite.</p>
+    </div>
+</body>
+
+</html>
