@@ -45,28 +45,13 @@ async function wmFetchInternal(event: FetchEvent): Promise<Response> {
   const imageDigest = url.hostname.replace(/\.webmirror$/, "");
   const path = normalizePath(url.pathname);
 
-  // assume the response is a json array of server URLs ending with a trailing slash
-  // e.g. http://127.0.0.1:8080/<hash>/
-  const servers = await (await fetch(
-    `http://127.0.0.1:2020/v0/descriptions/${imageDigest}/servers`,
-  ))
-    .json();
-
-  const server = servers[0];
-
-  const manifest = await (await fetch(
-    `${server}.webmirror/directory-description.json`,
-    {
-      integrity: `sha256-${encodeBase64(decodeBase32(imageDigest))}`,
-    },
-  )).json();
+  const manifest = await retrieveDescription(imageDigest);
 
   // assume it's a hash of type
   // path --> {size: integer, digest: base32 encoded sha-256 hash}
   const { size, digest: fileDigest } = manifest[path];
 
-  const fileBlob = await (await fetch(
-    `${server}${path}`,
+  const fileBlob = await (await caFetch(imageDigest, path,
     {
       integrity: `sha256-${encodeBase64(decodeBase32(fileDigest))}`,
     },
@@ -112,6 +97,62 @@ async function wmFetchInternal(event: FetchEvent): Promise<Response> {
     );
   }
 }
+
+async function retrieveDescription(descDigest: string): Promise<any> {
+  const url = new URL(`http://${descDigest}/.webmirror/directory-description.json`);
+
+  let blob = await cacheGet(url);
+
+  if (!blob) {
+    blob = await (await caFetch(
+      descDigest, 
+      '.webmirror/directory-description.json',
+      {
+        integrity: `sha256-${encodeBase64(decodeBase32(descDigest))}`,
+      },
+    )).blob();
+  
+    cachePut(url, blob);
+  }
+  
+  return JSON.parse(await blob.text());
+}
+
+async function cachePut(url: URL, blob: Blob) {
+  const cache = await caches.open('webmirror');
+  const request = new Request(url);
+  const response = new Response(blob); 
+  await cache.put(request, response);
+}
+
+async function cacheGet(url: URL): Promise<Blob | null> {
+  const cache = await caches.open('webmirror');
+    const response = await cache.match(new Request(url));
+    if (response) {
+        const blob = await response.blob();
+        return blob;
+    } else {
+        return null;
+    }
+}
+
+/**
+ * caFetch is "content addressed fetch"
+ */
+async function caFetch(descDigest: string, path: string, options: RequestInit): Promise<Response> {
+  // assume the response is a json array of server URLs ending with a trailing slash
+  // e.g. http://127.0.0.1:8080/<hash>/
+  const servers = await (await fetch(
+    `http://127.0.0.1:2020/v0/descriptions/${descDigest}/servers`,
+  ))
+    .json();
+
+  const server = servers[0];
+
+  return fetch(`${server}${path}`, options);
+}
+
+
 
 function normalizePath(path: string): string {
   // Remove first slash to make paths relative

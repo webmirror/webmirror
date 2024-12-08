@@ -365,19 +365,11 @@ var webmirror = (() => {
     }
     const imageDigest = url.hostname.replace(/\.webmirror$/, "");
     const path = normalizePath(url.pathname);
-    const servers = await (await fetch(
-      `http://127.0.0.1:2020/v0/descriptions/${imageDigest}/servers`
-    )).json();
-    const server = servers[0];
-    const manifest = await (await fetch(
-      `${server}.webmirror/directory-description.json`,
-      {
-        integrity: `sha256-${encodeBase64(decodeBase322(imageDigest))}`
-      }
-    )).json();
+    const manifest = await retrieveDescription(imageDigest);
     const { size, digest: fileDigest } = manifest[path];
-    const fileBlob = await (await fetch(
-      `${server}${path}`,
+    const fileBlob = await (await caFetch(
+      imageDigest,
+      path,
       {
         integrity: `sha256-${encodeBase64(decodeBase322(fileDigest))}`
       }
@@ -416,6 +408,44 @@ var webmirror = (() => {
         }
       );
     }
+  }
+  async function retrieveDescription(descDigest) {
+    const url = new URL(`http://${descDigest}/.webmirror/directory-description.json`);
+    let blob = await cacheGet(url);
+    if (!blob) {
+      blob = await (await caFetch(
+        descDigest,
+        ".webmirror/directory-description.json",
+        {
+          integrity: `sha256-${encodeBase64(decodeBase322(descDigest))}`
+        }
+      )).blob();
+      cachePut(url, blob);
+    }
+    return JSON.parse(await blob.text());
+  }
+  async function cachePut(url, blob) {
+    const cache = await caches.open("webmirror");
+    const request = new Request(url);
+    const response = new Response(blob);
+    await cache.put(request, response);
+  }
+  async function cacheGet(url) {
+    const cache = await caches.open("webmirror");
+    const response = await cache.match(new Request(url));
+    if (response) {
+      const blob = await response.blob();
+      return blob;
+    } else {
+      return null;
+    }
+  }
+  async function caFetch(descDigest, path, options) {
+    const servers = await (await fetch(
+      `http://127.0.0.1:2020/v0/descriptions/${descDigest}/servers`
+    )).json();
+    const server = servers[0];
+    return fetch(`${server}${path}`, options);
   }
   function normalizePath(path) {
     return path.replace(/^\//, "");
