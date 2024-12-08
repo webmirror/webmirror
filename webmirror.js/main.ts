@@ -1,5 +1,6 @@
 // @deno-types="@types/range-parser"
 import parseRange from "range-parser";
+import { get as idbGet, set as idbSet } from "idb-keyval";
 
 import { decodeBase32, encodeBase64 } from "./encoding.ts";
 
@@ -144,16 +145,23 @@ async function caFetch(
   path: string,
   options: RequestInit,
 ): Promise<Response> {
-  // assume the response is a json array of server URLs ending with a trailing slash
-  // e.g. http://127.0.0.1:8080/<hash>/
-  const servers = await (await fetch(
-    `http://127.0.0.1:2020/v0/descriptions/${descDigest}/servers`,
-  ))
-    .json();
-
-  const server = servers[0];
-
+  const server = await getServer(descDigest);
   return fetch(`${server}${path}`, options);
+}
+
+async function getServer(descDigest: string): Promise<string> {
+  const key = `webmirror-servers--${descDigest}`;
+  let servers = (await idbGet(key)) || [];
+  if (servers.length === 0) {
+    // assume the response is a json array of server URLs ending with a trailing slash
+    // e.g. http://127.0.0.1:8080/<hash>/
+    servers = await (await fetch(
+      `http://127.0.0.1:2020/v0/descriptions/${descDigest}/servers`,
+    ))
+      .json();
+    await idbSet(key, servers);
+  }
+  return servers[0];
 }
 
 function normalizePath(path: string): string {

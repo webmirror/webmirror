@@ -118,6 +118,36 @@ var webmirror = (() => {
   });
   var import_range_parser = __toESM(require_range_parser());
 
+  // ../../../Library/Caches/deno/deno_esbuild/registry.npmjs.org/idb-keyval@6.2.1/node_modules/idb-keyval/dist/index.js
+  function promisifyRequest(request) {
+    return new Promise((resolve, reject) => {
+      request.oncomplete = request.onsuccess = () => resolve(request.result);
+      request.onabort = request.onerror = () => reject(request.error);
+    });
+  }
+  function createStore(dbName, storeName) {
+    const request = indexedDB.open(dbName);
+    request.onupgradeneeded = () => request.result.createObjectStore(storeName);
+    const dbp = promisifyRequest(request);
+    return (txMode, callback) => dbp.then((db) => callback(db.transaction(storeName, txMode).objectStore(storeName)));
+  }
+  var defaultGetStoreFunc;
+  function defaultGetStore() {
+    if (!defaultGetStoreFunc) {
+      defaultGetStoreFunc = createStore("keyval-store", "keyval");
+    }
+    return defaultGetStoreFunc;
+  }
+  function get(key, customStore = defaultGetStore()) {
+    return customStore("readonly", (store) => promisifyRequest(store.get(key)));
+  }
+  function set(key, value, customStore = defaultGetStore()) {
+    return customStore("readwrite", (store) => {
+      store.put(value, key);
+      return promisifyRequest(store.transaction);
+    });
+  }
+
   // https://jsr.io/@std/encoding/1.0.5/_validate_binary_like.ts
   var encoder = new TextEncoder();
   function getTypeName(value) {
@@ -367,13 +397,9 @@ var webmirror = (() => {
     const path = normalizePath(url.pathname);
     const manifest = await retrieveDescription(imageDigest);
     const { size, digest: fileDigest } = manifest[path];
-    const fileBlob = await (await caFetch(
-      imageDigest,
-      path,
-      {
-        integrity: `sha256-${encodeBase64(decodeBase322(fileDigest))}`
-      }
-    )).blob();
+    const fileBlob = await (await caFetch(imageDigest, path, {
+      integrity: `sha256-${encodeBase64(decodeBase322(fileDigest))}`
+    })).blob();
     const rangeHeader = event.request.headers.get("Range");
     if (rangeHeader) {
       const ranges = (0, import_range_parser.default)(size, rangeHeader);
@@ -410,7 +436,9 @@ var webmirror = (() => {
     }
   }
   async function retrieveDescription(descDigest) {
-    const url = new URL(`http://${descDigest}/.webmirror/directory-description.json`);
+    const url = new URL(
+      `http://${descDigest}/.webmirror/directory-description.json`
+    );
     let blob = await cacheGet(url);
     if (!blob) {
       blob = await (await caFetch(
@@ -441,11 +469,21 @@ var webmirror = (() => {
     }
   }
   async function caFetch(descDigest, path, options) {
-    const servers = await (await fetch(
-      `http://127.0.0.1:2020/v0/descriptions/${descDigest}/servers`
-    )).json();
-    const server = servers[0];
+    const server = await getServer(descDigest);
     return fetch(`${server}${path}`, options);
+  }
+  async function getServer(descDigest) {
+    const key = `webmirror-servers--${descDigest}`;
+    return await navigator.locks.request(key, async (_lock) => {
+      let servers = await get(key) || [];
+      if (servers.length === 0) {
+        servers = await (await fetch(
+          `http://127.0.0.1:2020/v0/descriptions/${descDigest}/servers`
+        )).json();
+        await set(key, servers);
+      }
+      return servers[0];
+    });
   }
   function normalizePath(path) {
     return path.replace(/^\//, "");

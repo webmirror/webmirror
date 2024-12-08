@@ -11,6 +11,7 @@
     "npm:@types/range-parser@1.2.7": "1.2.7",
     "npm:esbuild@*": "0.24.0",
     "npm:esbuild@0.24": "0.24.0",
+    "npm:idb-keyval@6.2.1": "6.2.1",
     "npm:range-parser@*": "1.2.1",
     "npm:range-parser@1.2.1": "1.2.1"
   },
@@ -147,6 +148,9 @@
         "@esbuild/win32-x64"
       ]
     },
+    "idb-keyval@6.2.1": {
+      "integrity": "sha512-8Sb3veuYCyrZL+VBt9LJfZjLUPWVvqn8tG28VqYNFCo43KHcKuq+b4EiXGeuaLAQWL2YmyDgMp2aSpH9JHsEQg=="
+    },
     "range-parser@1.2.1": {
       "integrity": "sha512-Hrgsx+orqoygnmhFbKaHE6c296J+HTAQXoxEF6gNupROmmGJRoyzfG3ccAveqCBrwr/2yxQ5BVd/GTl5agOwSg=="
     }
@@ -157,6 +161,7 @@
       "jsr:@std/encoding@1.0.5",
       "npm:@types/range-parser@1.2.7",
       "npm:esbuild@0.24",
+      "npm:idb-keyval@6.2.1",
       "npm:range-parser@1.2.1"
     ]
   }

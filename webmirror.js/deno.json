@@ -8,6 +8,7 @@
     "@std/encoding": "jsr:@std/encoding@1.0.5",
     "esbuild": "npm:esbuild@^0.24.0",
     "range-parser": "npm:range-parser@1.2.1",
+    "idb-keyval": "npm:idb-keyval@6.2.1",
     "@types/range-parser": "npm:@types/range-parser@1.2.7"
   },
   "compilerOptions": {
