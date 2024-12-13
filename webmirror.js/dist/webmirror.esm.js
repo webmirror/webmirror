@@ -383,21 +383,13 @@ var webmirror = (() => {
     }
   }
   async function wmFetchInternal(event) {
-    const url = new URL(event.request.url);
-    if (!url.hostname.endsWith(".webmirror")) {
-      throw new HttpError(
-        400,
-        "invalid WebMirror URI: hostname does not end with `.webmirror`"
-      );
-    }
+    const { descDigest, path } = parseURL(event.request.url);
     if (!["HEAD", "GET"].includes(event.request.method)) {
       throw new HttpError(400, "unsupported HTTP method");
     }
-    const imageDigest = url.hostname.replace(/\.webmirror$/, "");
-    const path = normalizePath(url.pathname);
-    const manifest = await retrieveDescription(imageDigest);
+    const manifest = await retrieveDescription(descDigest);
     const { size, digest: fileDigest } = manifest[path];
-    const fileBlob = await (await caFetch(imageDigest, path, {
+    const fileBlob = await (await caFetch(descDigest, path, {
       integrity: `sha256-${encodeBase64(decodeBase322(fileDigest))}`
     })).blob();
     const rangeHeader = event.request.headers.get("Range");
@@ -474,19 +466,28 @@ var webmirror = (() => {
   }
   async function getServer(descDigest) {
     const key = `webmirror-servers--${descDigest}`;
-    return await navigator.locks.request(key, async (_lock) => {
-      let servers = await get(key) || [];
-      if (servers.length === 0) {
-        servers = await (await fetch(
-          `http://127.0.0.1:2020/v0/descriptions/${descDigest}/servers`
-        )).json();
-        await set(key, servers);
-      }
-      return servers[0];
-    });
+    let servers = await get(key) || [];
+    if (servers.length === 0) {
+      servers = await (await fetch(
+        `http://127.0.0.1:2020/v0/descriptions/${descDigest}/servers`
+      )).json();
+      await set(key, servers);
+    }
+    return servers[0];
   }
-  function normalizePath(path) {
-    return path.replace(/^\//, "");
+  function parseURL(urlS) {
+    const url = new URL(urlS);
+    let descDigest, path;
+    if (url.hostname.endsWith(".webmirror")) {
+      descDigest = url.hostname.replace(/\.webmirror$/, "");
+      path = url.pathname.replace(/^\//, "");
+    } else if (url.pathname.startsWith("/.webmirror/")) {
+      descDigest = url.pathname.match(/^\/\.webmirror\/([^\/]+)/)[1];
+      path = url.pathname.replace(/^\/\.webmirror\/([^\/]+)\//, "");
+    } else {
+      throw new HttpError(400, "invalid WebMirror URL");
+    }
+    return { descDigest, path };
   }
   return __toCommonJS(main_exports);
 })();

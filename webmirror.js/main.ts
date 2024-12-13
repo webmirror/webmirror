@@ -31,28 +31,19 @@ export function wmFetch(event: FetchEvent): Promise<Response> {
 }
 
 async function wmFetchInternal(event: FetchEvent): Promise<Response> {
-  const url = new URL(event.request.url);
-  if (!url.hostname.endsWith(".webmirror")) {
-    throw new HttpError(
-      400,
-      "invalid WebMirror URI: hostname does not end with `.webmirror`",
-    );
-  }
+  const {descDigest, path} = parseURL(event.request.url);
 
   if (!["HEAD", "GET"].includes(event.request.method)) {
     throw new HttpError(400, "unsupported HTTP method");
   }
 
-  const imageDigest = url.hostname.replace(/\.webmirror$/, "");
-  const path = normalizePath(url.pathname);
-
-  const manifest = await retrieveDescription(imageDigest);
+  const manifest = await retrieveDescription(descDigest);
 
   // assume it's a hash of type
   // path --> {size: integer, digest: base32 encoded sha-256 hash}
   const { size, digest: fileDigest } = manifest[path];
 
-  const fileBlob = await (await caFetch(imageDigest, path, {
+  const fileBlob = await (await caFetch(descDigest, path, {
     integrity: `sha256-${encodeBase64(decodeBase32(fileDigest))}`,
   })).blob();
 
@@ -164,7 +155,20 @@ async function getServer(descDigest: string): Promise<string> {
   return servers[0];
 }
 
-function normalizePath(path: string): string {
-  // Remove first slash to make paths relative
-  return path.replace(/^\//, "");
+function parseURL(urlS: string): {descDigest: string, path: string} {
+  const url = new URL(urlS);
+
+  let descDigest, path;
+
+  if (url.hostname.endsWith(".webmirror")) {
+    descDigest = url.hostname.replace(/\.webmirror$/, "");
+    path = url.pathname.replace(/^\//, '');
+  } else if (url.pathname.startsWith("/.webmirror/")) {
+    descDigest = url.pathname.match(/^\/\.webmirror\/([^\/]+)/)[1];
+    path = url.pathname.replace(/^\/\.webmirror\/([^\/]+)\//, "");
+  } else {
+    throw new HttpError(400, "invalid WebMirror URL");
+  }
+
+  return {descDigest, path};
 }
