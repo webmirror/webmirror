@@ -1,7 +1,7 @@
 {
   "tilejson": "3.0.0",
   "tiles": [
-    "http://5etjyadwydhyelv5why5ffa4qq7cq6a3fwlbb5qb4k6prantditq.webmirror/{z}/{x}/{y}.pbf"
+    "https://5etjyadwydhyelv5why5ffa4qq7cq6a3fwlbb5qb4k6prantditq.webmirror/{z}/{x}/{y}.pbf"
   ],
   "vector_layers": [
     {
