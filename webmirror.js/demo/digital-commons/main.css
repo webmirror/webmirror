@@ -1,66 +1,73 @@
 body {
-    padding: 8px 8px 8px 8px;
-    margin-left: auto;
-    margin-right: auto;
-    max-width: 700px;
-    hyphens: auto;
-  }
+  padding: 8px 8px 8px 8px;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 700px;
+  hyphens: auto;
+}
 
-  * {
-    font-family: sans-serif;
-  }
+* {
+  font-family: sans-serif;
+}
 
-  video {
-    display: block;
-    max-width: 640px;
-    margin-left: auto;
-    margin-right: auto;
-  }
+div.hr {
+  margin-top: 16px;
+  margin-left: calc((-100vw + 100%) / 2);
+  margin-right: calc((-100vw + 100%) / 2);
+  border-bottom: 8px double #000000;
+}
 
-  div#gallery {
-    display: flex;
-    height: 85vh;
-    margin-left: calc((-100vw + 100%) / 2);
-    margin-right: calc((-100vw + 100%) / 2);
-    overflow: scroll;
-  }
+video {
+  display: block;
+  max-width: 640px;
+  margin-left: auto;
+  margin-right: auto;
+}
 
-  audio {
-    width: 100%;
-  }
+div#gallery {
+  display: flex;
+  height: 85vh;
+  margin-left: calc((-100vw + 100%) / 2);
+  margin-right: calc((-100vw + 100%) / 2);
+  overflow: scroll;
+}
 
-  div#map {
-    height: 0;
-    max-width: 640px;
-    /* Percentages refer to the *width* of the containing block.
-       * https://developer.mozilla.org/en-US/docs/Web/CSS/padding-bottom
-       */
-    padding-bottom: 100%;
-    margin: 16px auto 16px auto;
-  }
+audio {
+  width: 100%;
+}
 
-  form {
-    display: flex;
-    margin-bottom: 16px;
-  }
+div#map {
+  height: 0;
+  max-width: 640px;
+  /* Percentages refer to the *width* of the containing block.
+   * https://developer.mozilla.org/en-US/docs/Web/CSS/padding-bottom
+   */
+  padding-bottom: 100%;
+  margin: 16px auto 16px auto;
+}
 
-  form input {
-    flex-grow: 2;
-    margin-right: 8px;
-  }
+form {
+  display: flex;
+  margin-bottom: 16px;
+}
 
-  div.callout {
-    border: 1px solid #000000;
-    border-radius: 4px;
-    padding: 0 0.5em;
-    margin: 16px 0 16px 0;
-  }
+form input {
+  flex-grow: 2;
+  margin-right: 8px;
+}
 
-  img {
-    height: 100%;
-  }
+div.callout {
+  border: 1px solid #000000;
+  border-radius: 4px;
+  padding: 0 0.5em;
+  margin: 16px 0 16px 0;
+}
 
-  div.callout header {
-    font-family: sans-serif;
-    font-weight: bold;
-  }
+img {
+  height: 100%;
+}
+
+div.callout header {
+  font-family: sans-serif;
+  font-weight: bold;
+}
