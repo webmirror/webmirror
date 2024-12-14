@@ -1,0 +1,2 @@
+webmirror-go/bin/*
+*.sqlite3
