@@ -466,14 +466,17 @@ var webmirror = (() => {
   }
   async function getServer(descDigest) {
     const key = `webmirror-servers--${descDigest}`;
-    let servers = await get(key) || [];
-    if (servers.length === 0) {
-      servers = await (await fetch(
-        `http://127.0.0.1:2020/v0/descriptions/${descDigest}/servers`
-      )).json();
+    let servers = await get(key);
+    if (servers == void 0) {
+      const url = new URL("https://tracker.webmirrors.org/v0/servers");
+      url.search = new URLSearchParams({ digest: descDigest }).toString();
+      servers = await (await fetch(url)).json();
       await set(key, servers);
     }
-    return servers[0];
+    if (servers.length === 0) {
+      throw new HttpError(404, "no servers found");
+    }
+    return servers[Math.floor(Math.random() * servers.length)];
   }
   function parseURL(urlS) {
     const url = new URL(urlS);
