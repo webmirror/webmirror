@@ -1,18 +1,16 @@
 package main
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/alecthomas/kong"
 	"github.com/webmirror/webmirror/webmirror-go/internal/app/tracker"
 )
 
 var cli struct {
-	Data *os.File `arg:"true" help:"Path of the data JSON."`
-	Addr string   `default:":2020" help:"Address to listen."`
+	Database string `arg:"true" type:"path" help:"Path of the SQLite database."`
+	Addr     string `default:":2020" help:"Address to listen."`
 }
 
 func main() {
@@ -21,19 +19,19 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer cli.Data.Close()
 
-	var digestServerMap map[string][]string
-	err = json.NewDecoder(cli.Data).Decode(&digestServerMap)
+	db, err := tracker.Open(cli.Database)
 	if err != nil {
-		panic(err)
+		log.Fatalf("%+v\n", err)
 	}
 
 	http.Handle(
-		"/v0/descriptions/{digest}/servers",
-		tracker.DescriptionServersHandler{
-			DigestServerMap: digestServerMap,
-		},
+		"GET /v0/servers",
+		tracker.GetServersHandler{Handler: tracker.Handler{DB: db}},
+	)
+	http.Handle(
+		"POST /v0/servers",
+		tracker.PostServersHandler{Handler: tracker.Handler{DB: db}},
 	)
 
 	log.Fatal(http.ListenAndServe(cli.Addr, nil))
