@@ -142,17 +142,22 @@ async function caFetch(
 
 async function getServer(descDigest: string): Promise<string> {
   const key = `webmirror-servers--${descDigest}`;
-  let servers = (await idbGet(key)) || [];
-  if (servers.length === 0) {
+  let servers = await idbGet(key);
+  if (servers == undefined) {
     // assume the response is a json array of server URLs ending with a trailing slash
     // e.g. http://127.0.0.1:8080/<hash>/
-    servers = await (await fetch(
-      `http://127.0.0.1:2020/v0/descriptions/${descDigest}/servers`,
-    ))
-      .json();
+    const url = new URL("https://tracker.webmirrors.org/v0/servers");
+    url.search = new URLSearchParams({digest: descDigest}).toString();
+    servers = await (await fetch(url)).json();
     await idbSet(key, servers);
+  } 
+  
+  if (servers.length === 0) {
+    throw new HttpError(404, "no servers found");
   }
-  return servers[0];
+
+  // Get one server at random each time
+  return servers[Math.floor(Math.random() * servers.length)];
 }
 
 function parseURL(urlS: string): {descDigest: string, path: string} {
