@@ -34,6 +34,15 @@ to files distributed across mirrors:
 >
 > HTTP requests whose **Initiator** is `webmirror.esm.js:*` are those made by
 > the WebMirror Service Worker.
+>
+> If you want to see it again, delete all **on-device site data** before
+> reloading since WebMirror caches files and tracker responses:
+>
+> 1. To the left of the web address, click **View site information** icon
+>    ![](./assets/chrome-page-info-button.svg).
+> 1. Click **Cookies and site data**.
+> 1. Click **Manage on-device site data**.
+> 1. Click on the thrash icon to delete saved data.
 
 ## How it works
 
