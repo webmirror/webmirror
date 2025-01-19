@@ -1,0 +1,1 @@
+Assets to be used in docs such as README.
