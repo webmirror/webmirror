@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://webmirrors.org/directory-description.schema.json",
+  "title": "WebMirror Directory Description",
+  "description": "Directory description of a WebMirror dataset.",
+  "type": "object",
+  "patternProperties": {
+    "^.*[^/]$": {
+      "type": "object",
+      "properties": {
+        "digest": {
+          "type": "string",
+          "pattern": "^[a-z0-9]{52}$"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  },
+  "propertyNames": {
+    "$comment": "Property names (i.e. file paths) MUST NOT start with a forward slash. All paths MUST be 'relative'.",
+    "pattern": "^[^/]"
+  },
+  "additionalProperties": false,
+  "minProperties": 0
+}

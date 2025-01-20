@@ -1,0 +1,105 @@
+openapi: 3.0.3
+info:
+  title: WebMirror Tracker API
+  contact:
+    email: bora@boramalper.org
+  version: 0.0.1
+externalDocs:
+  description: Find out more about WebMirror
+  url: http://webmirrors.org/
+servers:
+  - url: https://tracker.webmirrors.org
+paths:
+  /v0/datasets/{hash}/mirrors:
+    get:
+      summary: List mirrors of a dataset
+      description: |
+        Returns the mirrors of a dataset given its hash.
+
+        The mirrors returned are usually a subset of all mirrors, selected and ordered at random.
+      parameters:
+        - name: hash
+          in: path
+          description: Lowercase Base32 encoded SHA-256 hash of the directory description of the dataset.
+          required: true
+          schema:
+            type: string
+            pattern: '^[a-z0-9]{52}$'
+            example: "ypw5mjhdg3qb2ia4xnuzbiywemsctda5rg3gsbpyvr7hy34nxemq"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  object: 
+                    type: string
+                    enum:
+                      - list
+                    example: list
+                  data:
+                    type: array
+                    minItems: 0
+                    items:
+                      $ref: '#/components/schemas/Mirror'
+        '400':
+          description: User error; malformed hash
+        '500':
+          description: Tracker error
+    post:
+      summary: Register a mirror of a dataset
+      description: Registers a mirror of a dataset given its hash.
+      parameters:
+        - name: hash
+          in: path
+          description: Lowercase Base32 encoded SHA-256 hash of the directory description of the dataset.
+          required: true
+          schema:
+            type: string
+            pattern: '^[a-z0-9]{52}$'
+            example: "ypw5mjhdg3qb2ia4xnuzbiywemsctda5rg3gsbpyvr7hy34nxemq"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  example: https://example.org/my-dataset/
+      responses:
+        '202':
+          description: Success; accepted to be registered later
+        '400':
+          description: User error; malformed hash or mirror URL
+        '500':
+          description: Tracker error
+components:
+  schemas:
+    Mirror:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+            - mirror
+          example: mirror
+        id:
+          type: integer
+          example: 42
+        url:
+          type: string
+          example: https://example.org/my-dataset/
+  requestBodies:
+    Mirror:
+      description: Mirror object that needs to be added
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/Mirror'
