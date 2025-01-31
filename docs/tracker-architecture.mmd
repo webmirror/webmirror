@@ -1,0 +1,16 @@
+sequenceDiagram
+    actor User
+    User ->>+Tracker Web Service: POST /v0/datasets/{hash}/mirrors
+    Tracker Web Service ->> Tracker Rate Limiter: Check rate limits and record
+    Tracker Rate Limiter -->> Tracker Web Service: Response
+    Tracker Web Service ->> Tracker Queue Service: Queue submission
+    Tracker Queue Service -->> Tracker Web Service: Ack
+    Tracker Web Service -->>-User: HTTP 202 Accepted
+    Tracker Validation Service ->> Tracker Queue Service: Pull
+    Tracker Queue Service -->> Tracker Validation Service: Submission
+    Tracker Validation Service ->> Mirror: GET .../.webmirror/directory-description.json
+    Mirror -->> Tracker Validation Service: HTTP 200 OK
+    Tracker Validation Service ->> Tracker Database: Insert registration
+    Tracker Database -->> Tracker Validation Service: Ack
+    Tracker Validation Service ->> Tracker Queue Service: Queue validation for future
+    Tracker Queue Service -->> Tracker Validation Service: Ack
