@@ -6,133 +6,96 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
-	"time"
+
+	"github.com/hibiken/asynq"
+	"github.com/redis/go-redis/v9"
 )
 
-type user struct {
-	id         int
-	defaultTTL int
+var digestRegex = regexp.MustCompile("^[a-z0-9]{52}$")
+
+type GetDatasetMirrorsHandler struct {
+	MirrorDB *redis.Client
 }
 
-type Handler struct {
-	DB *Database
-}
-
-type GetServersHandler struct {
-	Handler
-}
-
-func (h GetServersHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	digest := r.URL.Query().Get("digest")
-
-	if digest == "" {
-		writeResponse(w, http.StatusBadRequest, "`digest` query parameter is missing")
-		log.Println("`digest` query parameter missing")
+func (h GetDatasetMirrorsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	digest := r.PathValue("digest")
+	if !digestRegex.MatchString(digest) {
+		writeResponse(w, http.StatusBadRequest, "invalid digest in the request path")
 		return
 	}
 
-	rows, err := h.DB.sqlDB.QueryContext(
-		r.Context(),
-		"SELECT url FROM server WHERE digest = ? AND expires_at > ? LIMIT 100",
-		digest, time.Now().Unix(),
-	)
+	mirrors, err := h.MirrorDB.ZRandMember(r.Context(), digest, 10).Result()
 	if err != nil {
 		writeResponse(w, http.StatusInternalServerError, "")
 		log.Printf("%+v\n", err)
 		return
-	}
-	defer rows.Close()
-
-	urls := make([]string, 0)
-	for rows.Next() {
-		var url string
-		if err := rows.Scan(&url); err != nil {
-			writeResponse(w, http.StatusInternalServerError, "")
-			log.Printf("%+v\n", err)
-			return
-		}
-		urls = append(urls, url)
 	}
 
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "application/json")
 
+	data := make([]map[string]interface{}, 0)
+	for _, mirror := range mirrors {
+		data = append(data, map[string]interface{}{
+			"object": "mirror",
+			"url":    mirror,
+		})
+	}
+
 	encoder := json.NewEncoder(w)
 	encoder.SetEscapeHTML(false)
-	err = encoder.Encode(urls)
+	err = encoder.Encode(map[string]interface{}{
+		"object": "list",
+		"data":   data,
+	})
 	if err != nil {
+		writeResponse(w, http.StatusInternalServerError, "")
 		log.Printf("%+v\n", err)
 	}
 }
 
-type PostServersHandler struct {
-	Handler
+type PostDatasetMirrorsHandler struct {
+	Queue   *asynq.Client
+	LimitDB *redis.Client
 }
 
-func (h PostServersHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	user, err := h.authorize(r)
-	if err != nil {
-		writeResponse(w, http.StatusInternalServerError, "")
-		log.Printf("%+v\n", err)
-		return
-	}
-	if user == nil {
-		w.Header().Set("WWW-Authenticate", "Bearer")
-		writeResponse(w, http.StatusUnauthorized, "contact @boramalper for help")
-		return
-	}
-
-	var reqBody map[string]interface{}
-	err = json.NewDecoder(r.Body).Decode(&reqBody)
-	if err != nil {
-		writeResponse(w, http.StatusInternalServerError, "")
-		log.Printf("%+v\n", err)
-		return
-	}
-
-	url, err := url.ParseRequestURI(reqBody["url"].(string))
-	if err != nil {
-		writeResponse(w, http.StatusInternalServerError, "")
-		log.Printf("%+v\n", err)
-		return
-	}
-
-	host := fmt.Sprintf("%s://%s", url.Scheme, url.Host)
-	expires_at := time.Now().Add(time.Duration(user.defaultTTL) * time.Second).Unix()
-
-	_, err = h.DB.sqlDB.ExecContext(
-		r.Context(),
-		"INSERT INTO server (digest, host, path, user, expires_at) VALUES (?, ?, ?, ?, ?)",
-		reqBody["digest"].(string), host, url.Path, user.id, expires_at,
-	)
-	if err != nil {
-		writeResponse(w, http.StatusInternalServerError, "")
-		log.Printf("%+v\n", err)
-		return
-	}
-
-	writeResponse(w, http.StatusOK, "")
+type PostDatasetMirrorsRequestBody struct {
+	URL string `json:"url"`
 }
 
-func (h Handler) authorize(r *http.Request) (*user, error) {
-	auth := r.Header.Get("Authorization")
-	token := strings.TrimSpace(strings.Replace(auth, "Bearer", "", 1))
-
-	var (
-		id         int
-		defaultTTL int
-	)
-	err := h.DB.sqlDB.QueryRowContext(
-		r.Context(),
-		"SELECT id, default_ttl FROM user WHERE token = ?",
-		token,
-	).Scan(&id, &defaultTTL)
-	if err != nil {
-		return nil, err
+// TODO: implement rate limiting
+func (h PostDatasetMirrorsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	digest := r.PathValue("digest")
+	if !digestRegex.MatchString(digest) {
+		writeResponse(w, http.StatusBadRequest, "invalid digest in the request path")
+		return
 	}
 
-	return &user{id: id, defaultTTL: defaultTTL}, nil
+	var body PostDatasetMirrorsRequestBody
+	err := json.NewDecoder(r.Body).Decode(&body)
+	if err != nil {
+		writeResponse(w, http.StatusBadRequest, "invalid request body")
+		log.Printf("%+v\n", err)
+		return
+	}
+
+	url, err := url.ParseRequestURI(body.URL)
+	if err != nil {
+		writeResponse(w, http.StatusInternalServerError, "invalid `url` in the request body")
+		log.Printf("%+v\n", err)
+		return
+	}
+
+	if !strings.HasSuffix(url.Path, "/") {
+		writeResponse(w, http.StatusBadRequest, "`url` does not end with a trailing slash")
+	}
+
+	task, taskID := NewValidateTask(digest, url.String(), r.RemoteAddr)
+	h.Queue.EnqueueContext(r.Context(), task, asynq.TaskID(taskID))
+
+	writeResponse(w, http.StatusAccepted, "")
 }
 
 func writeResponse(w http.ResponseWriter, statusCode int, message string) {

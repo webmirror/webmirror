@@ -1,5 +1,6 @@
 *.sqlite3
 webmirror-go/bin/*
+*.rdb
 
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode,macos,go,deno
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode,macos,go,deno

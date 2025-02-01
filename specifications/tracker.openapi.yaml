@@ -88,9 +88,6 @@ components:
           enum:
             - mirror
           example: mirror
-        id:
-          type: integer
-          example: 42
         url:
           type: string
           example: https://example.org/my-dataset/
