@@ -3,9 +3,12 @@ package main
 import (
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/alecthomas/kong"
 	"github.com/hibiken/asynq"
+	"github.com/valkey-io/valkey-go"
+	"github.com/valkey-io/valkey-go/valkeylimiter"
 
 	"github.com/webmirror/webmirror/webmirror-go/internal/app/tracker"
 )
@@ -23,8 +26,6 @@ func main() {
 		panic(err)
 	}
 
-	limitDB := tracker.MustOpenLimitDB(cli.DatabaseAddr, cli.DatabasePass)
-	defer limitDB.Close()
 	mirrorDB := tracker.MustOpenMirrorDB(cli.DatabaseAddr, cli.DatabasePass)
 	defer mirrorDB.Close()
 	queue := asynq.NewClient(asynq.RedisClientOpt{
@@ -33,6 +34,19 @@ func main() {
 		DB:       tracker.QueueID,
 	})
 	defer queue.Close()
+	limiter, err := valkeylimiter.NewRateLimiter(valkeylimiter.RateLimiterOption{
+		ClientOption: valkey.ClientOption{
+			InitAddress: []string{cli.DatabaseAddr},
+			Password:    cli.DatabasePass,
+			SelectDB:    tracker.LimitID,
+		},
+		KeyPrefix: "requests",
+		Limit:     3,
+		Window:    time.Minute,
+	})
+	if err != nil {
+		panic(err)
+	}
 
 	http.Handle(
 		"GET /v0/datasets/{digest}/mirrors",
@@ -40,7 +54,7 @@ func main() {
 	)
 	http.Handle(
 		"POST /v0/datasets/{digest}/mirrors",
-		tracker.PostDatasetMirrorsHandler{LimitDB: limitDB, Queue: queue},
+		tracker.PostDatasetMirrorsHandler{Limiter: limiter, Queue: queue},
 	)
 
 	log.Fatal(http.ListenAndServe(cli.Addr, nil))

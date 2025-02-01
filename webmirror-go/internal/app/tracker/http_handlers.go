@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/netip"
 	"net/url"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/hibiken/asynq"
 	"github.com/redis/go-redis/v9"
+	"github.com/valkey-io/valkey-go/valkeylimiter"
 )
 
 var digestRegex = regexp.MustCompile("^[a-z0-9]{52}$")
@@ -58,6 +61,7 @@ func (h GetDatasetMirrorsHandler) ServeHTTP(w http.ResponseWriter, r *http.Reque
 
 type PostDatasetMirrorsHandler struct {
 	Queue   *asynq.Client
+	Limiter valkeylimiter.RateLimiterClient
 	LimitDB *redis.Client
 }
 
@@ -65,8 +69,24 @@ type PostDatasetMirrorsRequestBody struct {
 	URL string `json:"url"`
 }
 
-// TODO: implement rate limiting
 func (h PostDatasetMirrorsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	remote := canonicalIP(r.RemoteAddr)
+
+	res, err := h.Limiter.Allow(r.Context(), remote)
+	if err != nil {
+		writeResponse(w, http.StatusInternalServerError, "invalid `url` in the request body")
+		log.Printf("%+v\n", err)
+		return
+	}
+
+	log.Printf("RATE-LIMITING: %s %+v\n", remote, res)
+
+	if !res.Allowed {
+		w.Header().Add("Retry-After", time.UnixMilli(res.ResetAtMs).Format(http.TimeFormat))
+		writeResponse(w, http.StatusTooManyRequests, "")
+		return
+	}
+
 	digest := r.PathValue("digest")
 	if !digestRegex.MatchString(digest) {
 		writeResponse(w, http.StatusBadRequest, "invalid digest in the request path")
@@ -74,7 +94,7 @@ func (h PostDatasetMirrorsHandler) ServeHTTP(w http.ResponseWriter, r *http.Requ
 	}
 
 	var body PostDatasetMirrorsRequestBody
-	err := json.NewDecoder(r.Body).Decode(&body)
+	err = json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
 		writeResponse(w, http.StatusBadRequest, "invalid request body")
 		log.Printf("%+v\n", err)
@@ -105,5 +125,19 @@ func writeResponse(w http.ResponseWriter, statusCode int, message string) {
 		fmt.Fprintf(w, "%d %s: %s", statusCode, statusText, message)
 	} else {
 		fmt.Fprintf(w, "%d %s", statusCode, statusText)
+	}
+}
+
+func canonicalIP(addrPort string) string {
+	addr := netip.MustParseAddrPort(addrPort).Addr()
+
+	if addr.Is4() {
+		return addr.String()
+	} else {
+		prefix, err := addr.Prefix(64)
+		if err != nil {
+			panic(err)
+		}
+		return prefix.Addr().String()
 	}
 }

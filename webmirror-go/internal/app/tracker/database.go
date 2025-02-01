@@ -10,10 +10,6 @@ const MirrorID = 0
 const LimitID = 1
 const QueueID = 2
 
-func MustOpenLimitDB(addr, pass string) *redis.Client {
-	return mustOpenDB(addr, pass, LimitID)
-}
-
 func MustOpenMirrorDB(addr, pass string) *redis.Client {
 	return mustOpenDB(addr, pass, MirrorID)
 }
