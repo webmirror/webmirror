@@ -33,7 +33,6 @@ func main() {
 		},
 		asynq.Config{
 			Concurrency: cli.Concurrency,
-			// LogLevel:    asynq.DebugLevel,
 		},
 	)
 
@@ -42,7 +41,12 @@ func main() {
 	}
 
 	mux := asynq.NewServeMux()
-	mux.Handle(tracker.TaskTypeValidate, tracker.ValidateTaskHandler{MirrorDB: mirrorDB})
+	mux.Handle(
+		tracker.TaskTypeValidate,
+		tracker.ValidateTaskHandler{
+			MirrorDB: mirrorDB,
+		},
+	)
 
 	if err := srv.Run(mux); err != nil {
 		log.Fatal(err)

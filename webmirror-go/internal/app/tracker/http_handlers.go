@@ -3,7 +3,6 @@ package tracker
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"net/netip"
 	"net/url"
@@ -32,7 +31,6 @@ func (h GetDatasetMirrorsHandler) ServeHTTP(w http.ResponseWriter, r *http.Reque
 	mirrors, err := h.MirrorDB.ZRandMember(r.Context(), digest, 10).Result()
 	if err != nil {
 		writeResponse(w, http.StatusInternalServerError, "")
-		log.Printf("%+v\n", err)
 		return
 	}
 
@@ -55,7 +53,6 @@ func (h GetDatasetMirrorsHandler) ServeHTTP(w http.ResponseWriter, r *http.Reque
 	})
 	if err != nil {
 		writeResponse(w, http.StatusInternalServerError, "")
-		log.Printf("%+v\n", err)
 	}
 }
 
@@ -75,11 +72,8 @@ func (h PostDatasetMirrorsHandler) ServeHTTP(w http.ResponseWriter, r *http.Requ
 	res, err := h.Limiter.Allow(r.Context(), remote)
 	if err != nil {
 		writeResponse(w, http.StatusInternalServerError, "invalid `url` in the request body")
-		log.Printf("%+v\n", err)
 		return
 	}
-
-	log.Printf("RATE-LIMITING: %s %+v\n", remote, res)
 
 	if !res.Allowed {
 		w.Header().Add("Retry-After", time.UnixMilli(res.ResetAtMs).Format(http.TimeFormat))
@@ -97,14 +91,12 @@ func (h PostDatasetMirrorsHandler) ServeHTTP(w http.ResponseWriter, r *http.Requ
 	err = json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
 		writeResponse(w, http.StatusBadRequest, "invalid request body")
-		log.Printf("%+v\n", err)
 		return
 	}
 
 	url, err := url.ParseRequestURI(body.URL)
 	if err != nil {
 		writeResponse(w, http.StatusInternalServerError, "invalid `url` in the request body")
-		log.Printf("%+v\n", err)
 		return
 	}
 
@@ -112,7 +104,7 @@ func (h PostDatasetMirrorsHandler) ServeHTTP(w http.ResponseWriter, r *http.Requ
 		writeResponse(w, http.StatusBadRequest, "`url` does not end with a trailing slash")
 	}
 
-	task, taskID := NewValidateTask(digest, url.String(), r.RemoteAddr)
+	task, taskID := NewValidateTask(digest, url.String(), remote)
 	h.Queue.EnqueueContext(r.Context(), task, asynq.TaskID(taskID))
 
 	writeResponse(w, http.StatusAccepted, "")

@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"time"
@@ -46,6 +45,9 @@ func NewValidateTask(digest, url, submittedBy string) (*asynq.Task, string) {
 
 var httpClient = http.Client{
 	Timeout: 5 * time.Second,
+	CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
+		return errors.New("redirects are not allowed")
+	},
 }
 
 // 2 MiB = 2.097152 MB
@@ -55,78 +57,91 @@ type ValidateTaskHandler struct {
 	MirrorDB *redis.Client
 }
 
+// If `ProcessTask` returns
+//   - `SkipRetry` error, the task will be archived regardless of the number of
+//     remaining retry count;
+//   - Otherwise a non-nil error or panics, the task will be retried again
+//     later.
 func (h ValidateTaskHandler) ProcessTask(ctx context.Context, task *asynq.Task) error {
 	var payload ValidateTaskPayload
 	if err := json.Unmarshal(task.Payload(), &payload); err != nil {
-		log.Printf("error: %+v\n", err)
-		return err
+		// JSON parsing failures are not something you can retry on; skip
+		// retrying and archive the task right away instead.
+		return asynq.SkipRetry
 	}
 
-	log.Println("processing", payload)
-
 	err := h.MirrorDB.ZScore(ctx, payload.Digest, payload.URL).Err()
-	log.Println("ZSCORE", err)
 	if err == nil {
-		// error being nil indicates that the (digest, URL) pair is successfully
-		// found in the database. No need to validate, skip.
-		log.Println("already in the database, skipping")
+		// err being nil indicates that the (digest, URL) pair is successfully
+		// found in the database. No need to validate, stop processing.
 		return nil
 	} else if err != redis.Nil {
 		// `redis.Nil` is better thought as `redis.NotFoundError`. If the
-		// (digest, URL) par is not found in the database, we must validate. Any
-		// error other than "not found" is a failure.
-		return err
+		// (digest, URL) pair is not found in the database, we must continue the
+		// validation. Any error other than `redis.Nil` (i.e. "not found") is a
+		// system error so skip retrying and archive the task right away
+		// instead.
+		return asynq.SkipRetry
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, getDirDescURL(payload.URL), nil)
+	url, err := getDirDescURL(payload.URL)
 	if err != nil {
-		log.Printf("error: %+v\n", err)
-		return err
+		// Failure to get the directory description's URL is a system error so
+		// skip retrying and archive the task right away instead.
+		return asynq.SkipRetry
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		// Failure to create an HTTP request (without even making the request)
+		// is a system error so skip retrying and archive the task right away
+		// instead.
+		return asynq.SkipRetry
 	}
 
 	res, err := httpClient.Do(req)
 	if err != nil {
-		log.Printf("error: %+v\n", err)
-		return err
+		// Do not retry on remote-peer errors, just stop processing.
+		return nil
 	}
 
 	if res.StatusCode != http.StatusOK {
-		log.Printf("error: non-200 status: %d\n", res.StatusCode)
-		return errors.New("non-200 status")
+		// Do not retry on remote-peer errors, just stop processing.
+		return nil
 	}
 
 	hash := sha256.New()
 	_, err = io.CopyN(hash, res.Body, maxDigestSize)
 	if err != nil && err != io.EOF {
-		log.Printf("error: %+v\n", err)
-		return err
+		// Do not retry on remote-peer errors, just stop processing.
+		return nil
 	}
 
 	actualDigest := stdBase32NoPadLC.EncodeToString(hash.Sum(nil))
 	if payload.Digest != actualDigest {
-		// wrong mirror
-		// TODO: record this in the rate limiter
-		log.Println("error: digest mismatch")
-		log.Println("expected", payload.Digest)
-		log.Println("actual", actualDigest)
+		// Do not retry on remote-peer errors, just stop processing.
 		return nil
 	}
 
-	log.Printf("ALL GOOD YAY!")
-	h.MirrorDB.ZAdd(ctx, payload.Digest, redis.Z{Member: payload.URL, Score: float64(time.Now().Unix())})
+	h.MirrorDB.ZAdd(
+		ctx,
+		payload.Digest,
+		redis.Z{Member: payload.URL, Score: float64(time.Now().Unix())},
+	)
+
 	return nil
 }
 
-func getDirDescURL(mirror string) string {
+func getDirDescURL(mirror string) (string, error) {
 	rel, err := url.Parse(".webmirror/directory-description.json")
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
 	mirrorURL, err := url.Parse(mirror)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
-	return mirrorURL.ResolveReference(rel).String()
+	return mirrorURL.ResolveReference(rel).String(), nil
 }

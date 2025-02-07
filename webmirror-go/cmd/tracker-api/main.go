@@ -40,7 +40,7 @@ func main() {
 			Password:    cli.DatabasePass,
 			SelectDB:    tracker.LimitID,
 		},
-		KeyPrefix: "requests",
+		KeyPrefix: "mirror-registration-requests",
 		Limit:     3,
 		Window:    time.Minute,
 	})
