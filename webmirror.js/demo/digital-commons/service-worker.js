@@ -15,7 +15,10 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
-  if (url.hostname.endsWith(".webmirror") || url.pathname.startsWith("/.webmirror")) {
+  if (
+    url.hostname.endsWith(".webmirror") ||
+    url.pathname.startsWith("/.webmirror")
+  ) {
     event.respondWith(webmirror.wmFetch(event));
   }
 

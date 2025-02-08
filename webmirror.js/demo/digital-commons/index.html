@@ -1,107 +1,173 @@
 <!DOCTYPE html>
 <html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Digital Commons &mdash; WebMirror Demo</title>
+    <script
+      defer
+      crossorigin="anonymous"
+      src="https://www.unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"
+      integrity="sha256-vpYzxNhw4m+zfxz+XFp3GBZnEUAD6hYgeseFDY2ordE"
+    ></script>
+    <script
+      defer
+      crossorigin="anonymous"
+      src="https://www.unpkg.com/sql.js-httpvfs@0.8.12/dist/index.js"
+      integrity="sha256-AnR1R7U1QxLm24RGwyWPZy7HkWgXuXKS703rbNDCIek"
+    ></script>
+    <script
+      defer
+      crossorigin="anonymous"
+      src="https://www.unpkg.com/mustache@4.2.0/mustache.js"
+      integrity="sha256-qArKeVykXN7RCDNSV61kk+ncVPxNnw6/4NQxha9ZC5A"
+    ></script>
+    <script defer src="main.js"></script>
 
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Digital Commons &mdash; WebMirror Demo</title>
-  <script defer crossorigin="anonymous" src="https://www.unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"
-    integrity="sha256-vpYzxNhw4m+zfxz+XFp3GBZnEUAD6hYgeseFDY2ordE"></script>
-  <script defer crossorigin="anonymous" src="https://www.unpkg.com/sql.js-httpvfs@0.8.12/dist/index.js"
-    integrity="sha256-AnR1R7U1QxLm24RGwyWPZy7HkWgXuXKS703rbNDCIek"></script>
-  <script defer crossorigin="anonymous" src="https://www.unpkg.com/mustache@4.2.0/mustache.js"
-    integrity="sha256-qArKeVykXN7RCDNSV61kk+ncVPxNnw6/4NQxha9ZC5A"></script>
-  <script defer src="main.js"></script>
+    <link
+      rel="stylesheet"
+      crossorigin="anonymous"
+      href="https://www.unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css"
+      integrity="V2sIX92Uh6ZaGSFTKMHghsB85b9toJtmazgG09AI2uk"
+    >
+    <link rel="stylesheet" href="main.css">
+  </head>
 
-  <link rel="stylesheet" crossorigin="anonymous" href="https://www.unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css"
-    integrity="V2sIX92Uh6ZaGSFTKMHghsB85b9toJtmazgG09AI2uk">
-  <link rel="stylesheet" href="main.css">
-</head>
-
-<body>
-  <div class="callout">
-    <header>
-      <p>WebMirror demo</p>
-    </header>
-    <p>The following webpage features WebMirror, a web-native<sup>[0]</sup> protocol for secure<sup>[1]</sup>,
-      decentralised<sup>[2]</sup> access
-      to files distributed across mirrors.</p>
-    <p><sup>[0]</sup> "Web-native" as in designed with HTTP and modern Web APIs in mind such as <a
-        href="https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API">Service Workers</a> so that no
-      additional software nor browser extensions are needed to access files.</p>
-    <p><sup>[1]</sup> Files are addressed by their SHA-256 hash of their content to ensure the authenticity of the data
-      received from mirrors.</p>
-    <p><sup>[2]</sup> Files can be mirrored by anyone and users can retrieve files from any mirror; no party requires
-      any permission from any authority.</p>
-  </div>
-
-  <h1>Digital Commons</h1>
-  <p>Digital commons are defined as information and knowledge resources that are collectively created and owned or
-    shared between or among a community and that tend to be non-exclusive, that is, be (generally freely) available to
-    third parties. Thus, they are oriented to favor use and reuse, rather than to exchange as a commodity.</p>
-
-  <h2>Samples</h2>
-
-  <section>
+  <body>
     <div class="callout">
       <header>
         <p>WebMirror demo</p>
       </header>
-      <p>The following section demonstrates how you can use WebMirror to serve distributed images directly from their
-        mirrors.
+      <p>
+        The following webpage features WebMirror, a web-native<sup>[0]</sup>
+        protocol for secure<sup>[1]</sup>, decentralised<sup>[2]</sup> access to
+        files distributed across mirrors.
       </p>
-      <p>Right click on one of the images to <b>open image in new tab</b>. See what its URL looks like and notice how
-        the
-        image is loaded just fine.</p>
-      <p>Use cases: comic/anime websites, serving posters of movies and TV series, ...</p>
+      <p>
+        <sup>[0]</sup> "Web-native" as in designed with HTTP and modern Web APIs
+        in mind such as <a
+          href="https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API"
+        >Service Workers</a> so that no additional software nor browser
+        extensions are needed to access files.
+      </p>
+      <p>
+        <sup>[1]</sup> Files are addressed by their SHA-256 hash of their
+        content to ensure the authenticity of the data received from mirrors.
+      </p>
+      <p>
+        <sup>[2]</sup> Files can be mirrored by anyone and users can retrieve
+        files from any mirror; no party requires any permission from any
+        authority.
+      </p>
     </div>
-    <h3>Kismet, Man of Fate</h3>
+
+    <h1>Digital Commons</h1>
     <p>
-      <strong>Kismet, Man of Fate</strong> is a superhero published by Elliot
-      Publishing Company in the Golden Age of Comic Books. The series features
-      adventures of an Algerian superhero who was thought lost by the Allies at
-      the end of World War II. The character originally appeared in Bomber
-      Comics #1 (1944), making him the first identified Muslim superhero.
+      Digital commons are defined as information and knowledge resources that
+      are collectively created and owned or shared between or among a community
+      and that tend to be non-exclusive, that is, be (generally freely)
+      available to third parties. Thus, they are oriented to favor use and
+      reuse, rather than to exchange as a commodity.
     </p>
 
-    <div id="gallery">
-      <img loading="lazy" height="975" width="1403"
-        src="/.webmirror/qhlvaga6nfbt24cj2g3wvoyg4gyvznox6262lh2rhhhcmpjvvpqq/1.jpg">
-      <img loading="lazy" height="975" width="1378"
-        src="/.webmirror/qhlvaga6nfbt24cj2g3wvoyg4gyvznox6262lh2rhhhcmpjvvpqq/2.jpg">
-      <img loading="lazy" height="975" width="1395"
-        src="/.webmirror/qhlvaga6nfbt24cj2g3wvoyg4gyvznox6262lh2rhhhcmpjvvpqq/3.jpg">
-      <img loading="lazy" height="975" width="1377"
-        src="/.webmirror/qhlvaga6nfbt24cj2g3wvoyg4gyvznox6262lh2rhhhcmpjvvpqq/4.jpg">
-      <img loading="lazy" height="975" width="1384"
-        src="/.webmirror/qhlvaga6nfbt24cj2g3wvoyg4gyvznox6262lh2rhhhcmpjvvpqq/5.jpg">
-      <img loading="lazy" height="975" width="1395"
-        src="/.webmirror/qhlvaga6nfbt24cj2g3wvoyg4gyvznox6262lh2rhhhcmpjvvpqq/6.jpg">
-      <img loading="lazy" height="975" width="1370"
-        src="/.webmirror/qhlvaga6nfbt24cj2g3wvoyg4gyvznox6262lh2rhhhcmpjvvpqq/7.jpg">
-    </div>
-    <div class="hr"></div>
-  </section>
+    <h2>Samples</h2>
 
-  <section>
-    <div class="callout">
-      <header>
-        <p>WebMirror demo</p>
-      </header>
-      <p>The following section demonstrates how you can use WebMirror to serve distributed audio files directly from
-        their
-        mirrors.
+    <section>
+      <div class="callout">
+        <header>
+          <p>WebMirror demo</p>
+        </header>
+        <p>
+          The following section demonstrates how you can use WebMirror to serve
+          distributed images directly from their mirrors.
+        </p>
+        <p>
+          Right click on one of the images to <b>open image in new tab</b>. See
+          what its URL looks like and notice how the image is loaded just fine.
+        </p>
+        <p>
+          Use cases: comic/anime websites, serving posters of movies and TV
+          series, ...
+        </p>
+      </div>
+      <h3>Kismet, Man of Fate</h3>
+      <p>
+        <strong>Kismet, Man of Fate</strong> is a superhero published by Elliot
+        Publishing Company in the Golden Age of Comic Books. The series features
+        adventures of an Algerian superhero who was thought lost by the Allies
+        at the end of World War II. The character originally appeared in Bomber
+        Comics #1 (1944), making him the first identified Muslim superhero.
       </p>
-      <p>Use cases: distributing podcasts, downloading/streaming audiobooks and music, ...</p>
-    </div>
-    <h3>Passacaglia and Fugue in C minor, BWV 582</h3>
-    <p>
-      <strong>Passacaglia and Fugue in C minor</strong> (BWV 582) is an organ
-      piece by Johann Sebastian Bach. Presumably composed early in Bach's
-      career, it is one of his most important and well-known works, and an
-      important influence on 19th- and 20th-century passacaglias.
-    </p>
-    <!-- Firefox doesn't use the Service Worker for <video> unless
+
+      <div id="gallery">
+        <img
+          loading="lazy"
+          height="975"
+          width="1403"
+          src="/.webmirror/qhlvaga6nfbt24cj2g3wvoyg4gyvznox6262lh2rhhhcmpjvvpqq/1.jpg"
+        >
+        <img
+          loading="lazy"
+          height="975"
+          width="1378"
+          src="/.webmirror/qhlvaga6nfbt24cj2g3wvoyg4gyvznox6262lh2rhhhcmpjvvpqq/2.jpg"
+        >
+        <img
+          loading="lazy"
+          height="975"
+          width="1395"
+          src="/.webmirror/qhlvaga6nfbt24cj2g3wvoyg4gyvznox6262lh2rhhhcmpjvvpqq/3.jpg"
+        >
+        <img
+          loading="lazy"
+          height="975"
+          width="1377"
+          src="/.webmirror/qhlvaga6nfbt24cj2g3wvoyg4gyvznox6262lh2rhhhcmpjvvpqq/4.jpg"
+        >
+        <img
+          loading="lazy"
+          height="975"
+          width="1384"
+          src="/.webmirror/qhlvaga6nfbt24cj2g3wvoyg4gyvznox6262lh2rhhhcmpjvvpqq/5.jpg"
+        >
+        <img
+          loading="lazy"
+          height="975"
+          width="1395"
+          src="/.webmirror/qhlvaga6nfbt24cj2g3wvoyg4gyvznox6262lh2rhhhcmpjvvpqq/6.jpg"
+        >
+        <img
+          loading="lazy"
+          height="975"
+          width="1370"
+          src="/.webmirror/qhlvaga6nfbt24cj2g3wvoyg4gyvznox6262lh2rhhhcmpjvvpqq/7.jpg"
+        >
+      </div>
+      <div class="hr"></div>
+    </section>
+
+    <section>
+      <div class="callout">
+        <header>
+          <p>WebMirror demo</p>
+        </header>
+        <p>
+          The following section demonstrates how you can use WebMirror to serve
+          distributed audio files directly from their mirrors.
+        </p>
+        <p>
+          Use cases: distributing podcasts, downloading/streaming audiobooks and
+          music, ...
+        </p>
+      </div>
+      <h3>Passacaglia and Fugue in C minor, BWV 582</h3>
+      <p>
+        <strong>Passacaglia and Fugue in C minor</strong> (BWV 582) is an organ
+        piece by Johann Sebastian Bach. Presumably composed early in Bach's
+        career, it is one of his most important and well-known works, and an
+        important influence on 19th- and 20th-century passacaglias.
+      </p>
+      <!-- Firefox doesn't use the Service Worker for <video> unless
       -- `crossorigin="anonymous"`.
       --
       -- See https://stackoverflow.com/q/79061893/4466589 and
@@ -113,101 +179,123 @@
       -- > decision-making about whether a preflight check is needed.
       -- https://bugzilla.mozilla.org/show_bug.cgi?id=1923096#c7
       -->
-    <audio controls crossorigin="anonymous" preload="none"
-      src="/.webmirror/ypw5mjhdg3qb2ia4xnuzbiywemsctda5rg3gsbpyvr7hy34nxemq/bwv-582.m4a">
-    </audio>
-    <div class="hr"></div>
-  </section>
+      <audio
+        controls
+        crossorigin="anonymous"
+        preload="none"
+        src="/.webmirror/ypw5mjhdg3qb2ia4xnuzbiywemsctda5rg3gsbpyvr7hy34nxemq/bwv-582.m4a"
+      >
+      </audio>
+      <div class="hr"></div>
+    </section>
 
-  <section>
-    <div class="callout">
-      <header>
-        <p>WebMirror demo</p>
-      </header>
-      <p>The following section demonstrates how you can use WebMirror to serve distributed video files directly from
-        their
-        mirrors.
+    <section>
+      <div class="callout">
+        <header>
+          <p>WebMirror demo</p>
+        </header>
+        <p>
+          The following section demonstrates how you can use WebMirror to serve
+          distributed video files directly from their mirrors.
+        </p>
+        <p>
+          Use cases: distributing video podcasts, downloading/streaming movies
+          and TV series, ...
+        </p>
+      </div>
+      <h3>Man with a Movie Camera</h3>
+      <p>
+        <strong>Man with a Movie Camera</strong> (Russian: Человек с
+        киноаппаратом, romanized: <i>Chelovek s kinoapparatom</i>) is an
+        experimental 1929 Soviet silent documentary film, directed by Dziga
+        Vertov, filmed by his brother Mikhail Kaufman, and edited by Vertov's
+        wife Yelizaveta Svilova. Kaufman also appears as the eponymous Man of
+        the film.
       </p>
-      <p>Use cases: distributing video podcasts, downloading/streaming movies and TV series, ...</p>
-    </div>
-    <h3>Man with a Movie Camera</h3>
-    <p>
-      <strong>Man with a Movie Camera</strong> (Russian: Человек с
-      киноаппаратом, romanized: <i>Chelovek s kinoapparatom</i>) is an
-      experimental 1929 Soviet silent documentary film, directed by Dziga
-      Vertov, filmed by his brother Mikhail Kaufman, and edited by Vertov's wife
-      Yelizaveta Svilova. Kaufman also appears as the eponymous Man of the film.
-    </p>
 
-    <!-- Firefox doesn't use the Service Worker for <video> unless
+      <!-- Firefox doesn't use the Service Worker for <video> unless
       -- `crossorigin="anonymous"`.
       --
       -- See above.
       -->
-    <video controls crossorigin="anonymous" preload="none">
-      <source src="/.webmirror/ptk4cvuyidlpx5vk35yus7hlxq6edk5xwhs5lkftrtti4cpimhsq/man-with-a-movie-camera.mp4"
-        type="video/mp4">
-    </video>
-    <div class="hr"></div>
-  </section>
+      <video controls crossorigin="anonymous" preload="none">
+        <source
+          src="/.webmirror/ptk4cvuyidlpx5vk35yus7hlxq6edk5xwhs5lkftrtti4cpimhsq/man-with-a-movie-camera.mp4"
+          type="video/mp4"
+        >
+      </video>
+      <div class="hr"></div>
+    </section>
 
-  <section>
-    <div class="callout">
-      <header>
-        <p>WebMirror demo</p>
-      </header>
+    <section>
+      <div class="callout">
+        <header>
+          <p>WebMirror demo</p>
+        </header>
+        <p>
+          The following section demonstrates how you can use WebMirror, together
+          with <a href="https://maplibre.org/maplibre-gl-js/docs/"
+          >MapLibre GL JS</a>, to load map tiles that are distributed across
+          mirrors.
+        </p>
+        <p>
+          It also demonstrates how you can use WebMirror in some non-trivial
+          scenarios such as accessing distributed content dynamically in a
+          pre-built JavaScript app.
+        </p>
+        <p>Use cases: serving map tiles</p>
+      </div>
+      <h3>OpenStreetMap</h3>
       <p>
-        The following section demonstrates how you can use WebMirror, together with <a
-          href="https://maplibre.org/maplibre-gl-js/docs/">MapLibre GL JS</a>, to load map tiles that are distributed
-        across mirrors.
+        <strong>OpenStreetMap</strong> is a website that uses an open geographic
+        database which is updated and maintained by a community of volunteers
+        via open collaboration. Contributors collect data from surveys, trace
+        from aerial photo imagery or satellite imagery, and also import from
+        other freely licensed geodata sources.
       </p>
-      <p>It also demonstrates how you can use WebMirror in some non-trivial scenarios such as
-        accessing distributed content dynamically in
-        a pre-built JavaScript app.</p>
-      <p>Use cases: serving map tiles</p>
-    </div>
-    <h3>OpenStreetMap</h3>
-    <p>
-      <strong>OpenStreetMap</strong> is a
-      website that uses an open geographic database which is updated and
-      maintained by a community of volunteers via open collaboration.
-      Contributors collect data from surveys, trace from aerial photo imagery or
-      satellite imagery, and also import from other freely licensed geodata
-      sources.
-    </p>
-    <div id="map"></div>
-    <div class="hr"></div>
-  </section>
+      <div id="map"></div>
+      <div class="hr"></div>
+    </section>
 
-  <section>
-    <div class="callout">
-      <header>
-        <p>WebMirror demo</p>
-      </header>
-      <p>This section demonstrates how you can use WebMirror, together with <a href="https://www.sqlite.org/">SQLite</a>
-        and <a href="https://github.com/phiresky/sql.js-httpvfs">sql.js-httpvfs</a>, to power a distributed static
-        website to have search functionality that typically requires a backend server to process queries.</p>
-      <p>It also demonstrates how you can use WebMirror in some non-trivial scenarios such as
-        accessing distributed content dynamically in
-        a pre-compiled WebAssembly app.</p>
-      <p>Use cases: searching distributed content repositories (e.g. <a href="https://www.gutenberg.org/">Project
-          Gutenberg</a>)</p>
-    </div>
+    <section>
+      <div class="callout">
+        <header>
+          <p>WebMirror demo</p>
+        </header>
+        <p>
+          This section demonstrates how you can use WebMirror, together with <a
+            href="https://www.sqlite.org/"
+          >SQLite</a>
+          and <a href="https://github.com/phiresky/sql.js-httpvfs"
+          >sql.js-httpvfs</a>, to power a distributed static website to have
+          search functionality that typically requires a backend server to
+          process queries.
+        </p>
+        <p>
+          It also demonstrates how you can use WebMirror in some non-trivial
+          scenarios such as accessing distributed content dynamically in a
+          pre-compiled WebAssembly app.
+        </p>
+        <p>
+          Use cases: searching distributed content repositories (e.g. <a
+            href="https://www.gutenberg.org/"
+          >Project Gutenberg</a>)
+        </p>
+      </div>
 
-    <h3>Open Library</h3>
-    <p>
-      <strong>Open Library</strong> is an online project intended to create "one
-      web page for every book ever published". Open Library provides online digital copies in multiple formats, created
-      from images of many public domain,
-      out-of-print, and in-print books.
-    </p>
+      <h3>Open Library</h3>
+      <p>
+        <strong>Open Library</strong> is an online project intended to create
+        "one web page for every book ever published". Open Library provides
+        online digital copies in multiple formats, created from images of many
+        public domain, out-of-print, and in-print books.
+      </p>
 
-    <form>
-      <input type="text" placeholder="Try &quot;Python&quot;">
-      <button type="submit">Search</button>
-    </form>
-    <ul id="olResults"></ul>
-  </section>
-</body>
-
+      <form>
+        <input type="text" placeholder="Try &quot;Python&quot;">
+        <button type="submit">Search</button>
+      </form>
+      <ul id="olResults"></ul>
+    </section>
+  </body>
 </html>

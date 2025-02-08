@@ -241,9 +241,9 @@ async function changeCurrentServer(
   // There can be multiple requests in flight intercepted by WebMirror Service
   // Worker, such as when loading map tiles. All of those would use the same
   // server, and let's assume that the server is down. Those requests would then
-  // fail one by one in quick succession, and then we'd try to change the 
-  // current server in good faith *for every failure*. However, if we do not 
-  // check what the current  server is and whether it is the one that failed, 
+  // fail one by one in quick succession, and then we'd try to change the
+  // current server in good faith *for every failure*. However, if we do not
+  // check what the current  server is and whether it is the one that failed,
   // we can easily cycle through all good servers in our list without realising.
   //
   // When a caller requests this function to change the current server, check

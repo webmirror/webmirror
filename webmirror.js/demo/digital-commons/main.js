@@ -36,13 +36,13 @@ function setupMap() {
       zoom: 5,
       maxZoom: 6,
       container: "map",
-      scrollZoom: false
+      scrollZoom: false,
     });
     const zoomControl = new maplibregl.NavigationControl({
       showCompass: false,
-      showZoom: true
+      showZoom: true,
     });
-    map.addControl(zoomControl, 'top-right');
+    map.addControl(zoomControl, "top-right");
   }
 
   const observerCallback = (entries, observer) => {
