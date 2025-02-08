@@ -14,5 +14,10 @@
   "compilerOptions": {
     "lib": ["ES2023", "WebWorker", "deno.ns"],
     "strictNullChecks": true
+  },
+  "fmt": {
+    "exclude": [
+      "dist"
+    ]
   }
 }
