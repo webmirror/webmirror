@@ -8,4 +8,4 @@ rsync --info=progress2 \
     --verbose \
     -a \
     . \
-    "$HOST:/home/bora/webmirror/"
+    "$HOST:/home/bora/webmirror-nov/"
