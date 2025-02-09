@@ -5,7 +5,7 @@ distributed across mirrors.
 
 Trackers help Clients to discover Mirror Servers for a given dataset.
 
-webmirror-tracker is a free software for WebMirror Trackers. It currently powers <https://tracker.webmirrors.org/>, a freely available Tracker maintained by the WebMirror project for public use.
+webmirror-tracker is a free software for WebMirror Trackers. It currently powers [tracker.webmirrors.org](https://tracker.webmirrors.org/), a freely available Tracker maintained by the WebMirror project for public use.
 
 This document describes the architecture of webmirror-tracker.
 
@@ -35,4 +35,4 @@ sequenceDiagram
 ```
 
 ## See also
-* [WebMirror Tracker OpenAPI Spec](https://webmirror.github.io/tracker/openapi-spec.html)
+* [WebMirror Tracker OpenAPI Spec](https://webmirror.github.io/webmirror/tracker/openapi-spec)

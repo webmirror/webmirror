@@ -14,7 +14,7 @@ WebMirror consists of three major components:
    * We are not working on any standalone Clients as of yet.
 1. Trackers \
    Those who help Clients to discover Mirror Servers for a given dataset.
-   * [OpenAPI Spec for Tracker API](../specifications/tracker.openapi.yaml)
-   * WebMirror project maintains a freely available Tracker for public use at <https://tracker.webmirrors.org/> running **webmirror-tracker** software. 
-     * [webmirror-tracker Architecture](./webmirror-tracker%20Architecture.md)
+   * [OpenAPI Spec for Tracker API](https://webmirror.github.io/webmirror/tracker/openapi-spec)
+   * WebMirror project maintains a freely available Tracker for public use at [tracker.webmirrors.org](https://tracker.webmirrors.org/) running **webmirror-tracker** software. 
+     * [webmirror-tracker Architecture](./tracker/webmirror-tracker-architecture.md)
 
