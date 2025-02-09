@@ -41,8 +41,8 @@ func main() {
 			SelectDB:    tracker.LimitID,
 		},
 		KeyPrefix: "mirror-registration-requests",
-		Limit:     3,
-		Window:    time.Minute,
+		Limit:     1,
+		Window:    time.Second,
 	})
 	if err != nil {
 		panic(err)
