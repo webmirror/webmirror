@@ -15,7 +15,7 @@ import (
 	"github.com/valkey-io/valkey-go/valkeylimiter"
 )
 
-var digestRegex = regexp.MustCompile("^[a-z0-9]{52}$")
+var digestRegex = regexp.MustCompile("^[a-z2-7]{52}$")
 
 type GetDatasetMirrorsHandler struct {
 	MirrorDB *redis.Client
@@ -24,7 +24,7 @@ type GetDatasetMirrorsHandler struct {
 func (h GetDatasetMirrorsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	digest := r.PathValue("digest")
 	if !digestRegex.MatchString(digest) {
-		writeResponse(w, http.StatusBadRequest, "invalid digest in the request path")
+		writeResponse(w, http.StatusBadRequest, "malformed digest in the request path")
 		return
 	}
 
@@ -59,7 +59,6 @@ func (h GetDatasetMirrorsHandler) ServeHTTP(w http.ResponseWriter, r *http.Reque
 type PostDatasetMirrorsHandler struct {
 	Queue   *asynq.Client
 	Limiter valkeylimiter.RateLimiterClient
-	LimitDB *redis.Client
 }
 
 type PostDatasetMirrorsRequestBody struct {
@@ -83,7 +82,7 @@ func (h PostDatasetMirrorsHandler) ServeHTTP(w http.ResponseWriter, r *http.Requ
 
 	digest := r.PathValue("digest")
 	if !digestRegex.MatchString(digest) {
-		writeResponse(w, http.StatusBadRequest, "invalid digest in the request path")
+		writeResponse(w, http.StatusBadRequest, "malformed digest in the request path")
 		return
 	}
 
@@ -110,7 +109,28 @@ func (h PostDatasetMirrorsHandler) ServeHTTP(w http.ResponseWriter, r *http.Requ
 	writeResponse(w, http.StatusAccepted, "")
 }
 
+func MakeHandler(
+	databaseAddr, databasePass string, disableCache bool,
+) *http.ServeMux {
+	mirrorDB := MustOpenMirrorDB(databaseAddr, databasePass)
+	queue := MustOpenQueue(databaseAddr, databasePass)
+	limiter := MustOpenLimiter(databaseAddr, databasePass, disableCache)
+
+	mux := http.NewServeMux()
+	mux.Handle(
+		"GET /v0/datasets/{digest}/mirrors",
+		GetDatasetMirrorsHandler{MirrorDB: mirrorDB},
+	)
+	mux.Handle(
+		"POST /v0/datasets/{digest}/mirrors",
+		PostDatasetMirrorsHandler{Limiter: limiter, Queue: queue},
+	)
+
+	return mux
+}
+
 func writeResponse(w http.ResponseWriter, statusCode int, message string) {
+	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(statusCode)
 	statusText := http.StatusText(statusCode)
 	if message != "" {
