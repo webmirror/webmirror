@@ -1,0 +1,6 @@
+qtuxtki3qzec32aoajuoarujm6rao4tesjgnyksbbxeky3silkda
+
+The digest above is the SHA-256 digest of the `directory-description.json`.
+
+Directory Descriptions are always hashed using SHA-256, regardless of the hash
+function chosen for files.

@@ -41,10 +41,10 @@ async function wmFetchInternal(event: FetchEvent): Promise<Response> {
 
   // assume it's a hash of type
   // path --> {size: integer, digest: base32 encoded sha-256 hash}
-  const { size, digest: fileDigest } = manifest[path];
+  const { size, hash: {digest: fileDigest, function: fileCHF} } = manifest[path];
 
   const fileBlob = await (await caFetch(descDigest, path, {
-    integrity: `sha256-${encodeBase64(decodeBase32(fileDigest))}`,
+    integrity: `${fileCHF}-${encodeBase64(decodeBase32(fileDigest))}`,
   })).blob();
 
   const rangeHeader = event.request.headers.get("Range");
@@ -197,7 +197,8 @@ async function getServers(descDigest: string): Promise<string[]> {
     // assume the response is a json array of server URLs ending with a trailing slash
     // e.g. http://127.0.0.1:8080/<hash>/
     const resp = await fetch(
-      `https://tracker.webmirrors.org/v0/datasets/${descDigest}/mirrors`,
+      // `https://tracker.webmirrors.org/v0/datasets/${descDigest}/mirrors`,
+      `http://127.0.0.1:2020/v0/datasets/${descDigest}/mirrors`,
       {
         // The browser fetches the resource from the remote server without
         // first looking in the cache, *and will not* update the cache with the

@@ -8,9 +8,30 @@
     "^.*[^/]$": {
       "type": "object",
       "properties": {
-        "digest": {
-          "type": "string",
-          "pattern": "^[a-z0-9]{52}$"
+        "hash": {
+          "oneOf": [
+            {
+              "function": {"const": "sha256"},
+              "digest": {
+                "type": "string",
+                "pattern": "^[a-z2-7]{52}$"
+              }
+            },
+            {
+              "function": {"const": "sha384"},
+              "digest": {
+                "type": "string",
+                "pattern": "^[a-z2-7]{77}$"
+              }
+            },
+            {
+              "function": {"const": "sha512"},
+              "digest": {
+                "type": "string",
+                "pattern": "^[a-z2-7]{103}$"
+              }
+            }
+          ]
         },
         "size": {
           "type": "integer",

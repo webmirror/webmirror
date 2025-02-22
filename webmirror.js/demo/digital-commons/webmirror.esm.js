@@ -1,1 +1,0 @@
-../../dist/webmirror.esm.js

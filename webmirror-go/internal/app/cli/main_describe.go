@@ -2,9 +2,11 @@ package cli
 
 import (
 	"crypto/sha256"
+	"crypto/sha512"
 	"encoding/base32"
 	"encoding/json"
 	"fmt"
+	"hash"
 	"io"
 	"io/fs"
 	"os"
@@ -13,7 +15,19 @@ import (
 	"strings"
 )
 
-func MainDescribe(dirPath string) {
+func MainDescribe(dirPath, chf string) {
+	var fileHasher hash.Hash
+	switch chf {
+	case "sha256":
+		fileHasher = sha256.New()
+	case "sha384":
+		fileHasher = sha512.New384()
+	case "sha512":
+		fileHasher = sha512.New()
+	default:
+		panic(fmt.Errorf("unknown cryptographic hash function: %s", chf))
+	}
+
 	contents := make(map[string]any)
 	err := filepath.WalkDir(dirPath, func(path_ string, dirent fs.DirEntry, err error) error {
 		if dirent.IsDir() {
@@ -23,7 +37,7 @@ func MainDescribe(dirPath string) {
 			return nil
 		}
 
-		digest, size, err := hashFile(path_)
+		digest, size, err := hashFile(fileHasher, path_)
 		if err != nil {
 			return err
 		}
@@ -34,8 +48,11 @@ func MainDescribe(dirPath string) {
 		}
 
 		contents[relPath] = map[string]any{
-			"digest": base32Encode(digest),
-			"size":   size,
+			"hash": map[string]any{
+				"function": chf,
+				"digest":   base32Encode(digest),
+			},
+			"size": size,
 		}
 
 		return nil
@@ -73,6 +90,15 @@ func MainDescribe(dirPath string) {
 	defer digestF.Close()
 
 	fmt.Fprintln(digestF, digest)
+	fmt.Fprintf(
+		digestF,
+		""+
+			"\n"+
+			"The digest above is the SHA-256 digest of the `directory-description.json`.\n"+
+			"\n"+
+			"Directory Descriptions are always hashed using SHA-256, regardless of the hash\n"+
+			"function chosen for files.\n",
+	)
 
 	wd, err := os.Getwd()
 	if err != nil {
@@ -90,19 +116,19 @@ func base32Encode(bs []byte) string {
 	return strings.ToLower(base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(bs))
 }
 
-func hashFile(filePath string) ([]byte, int64, error) {
+func hashFile(hasher hash.Hash, filePath string) ([]byte, int64, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, 0, err
 	}
 	defer file.Close()
 
-	hash := sha256.New()
+	hasher.Reset()
 
-	n, err := io.Copy(hash, file)
+	n, err := io.Copy(hasher, file)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	return hash.Sum(nil), n, nil
+	return hasher.Sum(nil), n, nil
 }
