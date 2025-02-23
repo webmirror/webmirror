@@ -1,0 +1,14 @@
+stages:
+  - build
+
+build-webmirror-go:
+  stage: build
+  script:
+    - cd webmirror-go
+    - make
+
+build-webmirror.js:
+  stage: build
+  script:
+    - cd webmirror.js
+    - deno run build
